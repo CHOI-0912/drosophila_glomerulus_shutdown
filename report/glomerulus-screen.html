@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  * { margin: 0; }
+  img, picture, svg { display: block; max-width: 100%; }
+  input, button, textarea, select { font: inherit; }
+</style>
+<title>Glomerulus Lesion Screen — BANC</title>
+
+<style>
+  :root {
+    --paper:      #f7f8fa;
+    --raised:     #ffffff;
+    --ink:        #171a21;
+    --ink-soft:   #464c59;
+    --neutral:    #737a8a;
+    --hair:       #dfe2e9;
+    --hair-soft:  #ecedf1;
+
+    --signal:     #4338ca;   /* influence, structure */
+    --signal-dim: #ecebfb;
+    --sever:      #9d2757;   /* the cut, the trap */
+    --sever-dim:  #fbeaf1;
+    --verify:     #2c6e57;
+    --warn:       #8a5d0c;
+
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Source Serif 4", Georgia, serif;
+    --sans: Pretendard, "Apple SD Gothic Neo", -apple-system, "Segoe UI", "Malgun Gothic", system-ui, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0f1216; --raised: #161a20; --ink: #e7e9ee; --ink-soft: #aeb4c0;
+      --neutral: #838b99; --hair: #2a2f38; --hair-soft: #20242b;
+      --signal: #948cf8; --signal-dim: #1e1f3a;
+      --sever: #e77aa6; --sever-dim: #331824;
+      --verify: #6cc3a1; --warn: #d3a44a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0f1216; --raised: #161a20; --ink: #e7e9ee; --ink-soft: #aeb4c0;
+    --neutral: #838b99; --hair: #2a2f38; --hair-soft: #20242b;
+    --signal: #948cf8; --signal-dim: #1e1f3a;
+    --sever: #e77aa6; --sever-dim: #331824;
+    --verify: #6cc3a1; --warn: #d3a44a;
+  }
+  :root[data-theme="light"] {
+    --paper: #f7f8fa; --raised: #ffffff; --ink: #171a21; --ink-soft: #464c59;
+    --neutral: #737a8a; --hair: #dfe2e9; --hair-soft: #ecedf1;
+    --signal: #4338ca; --signal-dim: #ecebfb;
+    --sever: #9d2757; --sever-dim: #fbeaf1;
+    --verify: #2c6e57; --warn: #8a5d0c;
+  }
+
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: var(--sans); line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 60rem; margin: 0 auto; padding: 4rem 1.5rem 7rem; }
+  .col  { max-width: 42rem; }
+
+  /* ---------- masthead ---------- */
+  .mast { border-bottom: 2px solid var(--ink); padding-bottom: 1.75rem; margin-bottom: 3rem; }
+  .eyebrow {
+    font-family: var(--serif); font-style: italic; font-size: .95rem;
+    color: var(--sever); letter-spacing: .01em; margin-bottom: .6rem;
+  }
+  h1 {
+    font-size: clamp(1.9rem, 4.4vw, 2.85rem); font-weight: 800;
+    letter-spacing: -.022em; line-height: 1.16; text-wrap: balance; margin-bottom: .7rem;
+  }
+  .standfirst { color: var(--ink-soft); font-size: 1.06rem; max-width: 44rem; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; margin-top: 1.5rem;
+    font-family: var(--mono); font-size: .76rem; color: var(--neutral);
+    text-transform: uppercase; letter-spacing: .07em;
+  }
+
+  /* ---------- sections ---------- */
+  section { margin-top: 4rem; }
+  .snum {
+    font-family: var(--serif); font-size: .95rem; color: var(--signal);
+    font-variant-numeric: lining-nums; letter-spacing: .06em; margin-bottom: .3rem;
+  }
+  h2 {
+    font-size: clamp(1.35rem, 2.6vw, 1.72rem); font-weight: 800; letter-spacing: -.017em;
+    line-height: 1.28; text-wrap: balance; margin-bottom: 1.1rem;
+    padding-bottom: .6rem; border-bottom: 1px solid var(--hair);
+  }
+  h3 {
+    font-size: 1.02rem; font-weight: 700; margin: 2rem 0 .75rem;
+    letter-spacing: -.008em;
+  }
+  h3 .tag {
+    font-family: var(--mono); font-size: .66rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .09em; padding: .16em .5em; border-radius: 3px; margin-left: .5rem;
+    vertical-align: .12em;
+  }
+  .tag.keep { background: var(--signal-dim); color: var(--signal); }
+  .tag.drop { background: var(--sever-dim); color: var(--sever); }
+
+  p { margin-bottom: .9rem; max-width: 42rem; }
+
+  ul { list-style: none; margin: 0 0 1.1rem; max-width: 44rem; }
+  ul li {
+    position: relative; padding-left: 1.05rem; margin-bottom: .48rem;
+  }
+  ul li::before {
+    content: ""; position: absolute; left: 0; top: .68em;
+    width: 5px; height: 5px; background: var(--signal); border-radius: 50%;
+  }
+  ul ul { margin: .4rem 0 .1rem; }
+  ul ul li::before { background: none; border: 1px solid var(--neutral); }
+  strong { font-weight: 700; }
+  code {
+    font-family: var(--mono); font-size: .855em; background: var(--hair-soft);
+    padding: .1em .38em; border-radius: 3px; color: var(--ink);
+  }
+
+  /* ---------- glossary: apparatus, not argument -- so no section number ---- */
+  .gloss {
+    background: var(--raised); border: 1px solid var(--hair);
+    border-radius: 6px; padding: 1.75rem 1.75rem 1.4rem;
+  }
+  .gloss h2 { border-bottom-color: var(--hair-soft); }
+  .glabel {
+    font-family: var(--mono); font-size: .68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .11em;
+    color: var(--neutral); margin-bottom: .35rem;
+  }
+  .gloss dl { margin: 0; }
+  .gloss dt {
+    font-family: var(--mono); font-size: .82rem; font-weight: 700;
+    color: var(--signal); margin: 1.5rem 0 .5rem;
+    padding-bottom: .35rem; border-bottom: 1px dashed var(--hair);
+  }
+  .gloss dt:first-of-type { margin-top: .5rem; }
+  .gloss dd { margin: 0; }
+  .gloss dd ul { margin-bottom: 0; }
+
+  /* ---------- trap callout ---------- */
+  .trap {
+    background: var(--raised); border: 1px solid var(--hair);
+    border-left: 4px solid var(--sever);
+    padding: 1.4rem 1.5rem; margin: 1.5rem 0; border-radius: 0 5px 5px 0;
+  }
+  .trap-label {
+    font-family: var(--mono); font-size: .68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .11em; color: var(--sever); margin-bottom: .55rem;
+  }
+  .trap p:last-child, .trap ul:last-child { margin-bottom: 0; }
+
+  .verdict {
+    background: var(--signal-dim); border-radius: 5px;
+    padding: 1.15rem 1.35rem; margin: 1.4rem 0; max-width: 44rem;
+    border: 1px solid color-mix(in srgb, var(--signal) 22%, transparent);
+  }
+  .verdict p { margin: 0; font-weight: 600; color: var(--ink); }
+
+  /* ---------- stat tiles ---------- */
+  .tiles {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: 1px; background: var(--hair); border: 1px solid var(--hair);
+    border-radius: 5px; overflow: hidden; margin: 1.6rem 0;
+  }
+  .tile { background: var(--raised); padding: 1.05rem 1.15rem; }
+  .tile .v {
+    font-family: var(--serif); font-size: 1.85rem; font-weight: 600; line-height: 1.05;
+    font-variant-numeric: lining-nums tabular-nums; letter-spacing: -.01em;
+  }
+  .tile .v.bad  { color: var(--sever); }
+  .tile .v.good { color: var(--signal); }
+  .tile .k {
+    font-family: var(--mono); font-size: .68rem; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--neutral); margin-top: .45rem; line-height: 1.45;
+  }
+
+  /* ---------- formula ---------- */
+  .formula {
+    font-family: var(--mono); font-size: .82rem; line-height: 1.85;
+    background: var(--raised); border: 1px solid var(--hair); border-radius: 5px;
+    padding: 1.1rem 1.25rem; margin: 1.1rem 0; overflow-x: auto;
+    color: var(--ink-soft); white-space: pre;
+  }
+  .formula b { color: var(--signal); font-weight: 600; }
+  .formula sub, .formula sup { font-size: .72em; line-height: 0; }
+  .gloss .formula { background: var(--paper); }
+
+  /* ---------- tables ---------- */
+  .scroll { overflow-x: auto; margin: 1.3rem 0; border: 1px solid var(--hair); border-radius: 5px; }
+  table { border-collapse: collapse; width: 100%; font-size: .855rem; background: var(--raised); }
+  th {
+    font-family: var(--mono); font-size: .66rem; text-transform: uppercase; letter-spacing: .075em;
+    color: var(--neutral); text-align: right; font-weight: 600;
+    padding: .72rem .8rem; border-bottom: 1px solid var(--hair); white-space: nowrap;
+  }
+  th:first-child, td:first-child { text-align: left; }
+  th .sub {
+    display: block; font-family: var(--sans); font-size: .68rem; font-weight: 400;
+    text-transform: none; letter-spacing: 0; color: var(--neutral);
+    margin-top: .18rem; opacity: .85;
+  }
+  td {
+    padding: .5rem .8rem; text-align: right; border-bottom: 1px solid var(--hair-soft);
+    font-variant-numeric: tabular-nums; color: var(--ink-soft); white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  td.g { font-weight: 700; color: var(--ink); font-family: var(--mono); font-size: .82rem; }
+  tr.top td.g { color: var(--signal); }
+  .bar { display: flex; align-items: center; gap: .5rem; justify-content: flex-end; }
+  .bar i {
+    display: block; height: 7px; background: var(--signal); border-radius: 1px;
+    opacity: .85; flex: none;
+  }
+  tr.top .bar i { opacity: 1; }
+  .bar span { font-variant-numeric: tabular-nums; min-width: 4.2em; text-align: right; }
+
+  .cap {
+    font-size: .8rem; color: var(--neutral); margin-top: -.5rem; margin-bottom: 1.5rem;
+    max-width: 44rem;
+  }
+
+  /* correlation matrix: encode strength in the cell, not just the digits */
+  table.corr th { text-align: right; }
+  table.corr td { font-family: var(--mono); font-size: .8rem; }
+  table.corr td.hi {
+    background: color-mix(in srgb, var(--signal) 15%, transparent);
+    color: var(--signal); font-weight: 700;
+  }
+  table.corr td.lo { color: var(--sever); }
+  table.corr td.dg { color: var(--neutral); opacity: .55; }
+  .sw {
+    display: inline-block; width: .72rem; height: .72rem; border-radius: 2px;
+    vertical-align: -.08em; margin-right: .1rem;
+  }
+  .sw.hi { background: color-mix(in srgb, var(--signal) 40%, transparent); }
+  .sw.lo { background: var(--sever); opacity: .55; }
+
+  /* ---------- reproduce ---------- */
+  pre {
+    font-family: var(--mono); font-size: .79rem; line-height: 1.75;
+    background: var(--raised); border: 1px solid var(--hair); border-radius: 5px;
+    padding: 1.1rem 1.25rem; overflow-x: auto; margin: 1.1rem 0; color: var(--ink-soft);
+  }
+  pre .c { color: var(--neutral); }
+
+  footer {
+    margin-top: 5rem; padding-top: 1.5rem; border-top: 1px solid var(--hair);
+    font-family: var(--mono); font-size: .74rem; color: var(--neutral);
+    text-transform: uppercase; letter-spacing: .07em;
+  }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+
+  <header class="mast">
+    <div class="eyebrow">BANC connectome · linear influence model · lesion screen</div>
+    <h1>Glomerulus 병변 스크린</h1>
+    <p class="standfirst">
+      후각 수용 뉴런(ORN) 전체를 seed로 두고 glomerulus를 하나씩 무력화했을 때,
+      모델상 influence 분포가 얼마나 교란되는지 측정. 두 개의 방법론적 함정을 걷어낸 뒤의 최종 결과.
+    </p>
+    <div class="meta">
+      <span>뉴런 150,299</span><span>Seed ORN 2,931</span><span>Glomerulus 54</span><span>2026-07-13</span>
+    </div>
+  </header>
+
+  <!-- ============ 결론 ============ -->
+  <section>
+    <div class="snum">00</div>
+    <h2>결론</h2>
+    <ul>
+      <li><strong>최종 순위는 엣지(시냅스) 수준 병변에서 나옴</strong> — 뉴런을 죽이는 대신 시냅스를 자름.</li>
+      <li>상위: <strong>DP1l</strong> ≫ DP1m &gt; VL2p &gt; VA2 &gt; DM1 &gt; V.</li>
+      <li>이 순위는 <strong>ORN 시냅스 개수 순위와 거의 같음</strong>. 따라서 해석은
+        <strong>"DP1l이 뇌로 가장 많은 후각 입력을 보냄"</strong>이지,
+        "DP1l이 특별한 요충지"가 아님.</li>
+      <li>도달 과정에서 <strong>실험 자체를 무의미하게 만드는 함정 2개</strong>를 발견·제거.
+        둘 다 조용히 실패하는 종류 — 숫자만 보면 정상으로 보임.</li>
+    </ul>
+
+    <div class="tiles">
+      <div class="tile"><div class="v bad">95.6%</div><div class="k">α를 재계산하면<br>사라지는 측정값 D</div></div>
+      <div class="tile"><div class="v bad">171 / 862</div><div class="k">뉴런 수준에서 죽인 PN 중<br>정말 그 glomerulus 소속인 것</div></div>
+      <div class="tile"><div class="v bad">ρ +0.33</div><div class="k">뉴런 수준 순위와<br>엣지 수준 순위의 불일치</div></div>
+      <div class="tile"><div class="v good">ρ +0.85</div><div class="k">최종 순위 ↔<br>ORN 시냅스 개수 순위</div></div>
+    </div>
+    <p class="cap">
+      <strong>ρ</strong> = 두 순위표가 얼마나 같은지 (1 = 완전히 같은 순서, 0 = 무관).
+      모든 기호의 정의식은 바로 아래 「읽는 법」에.
+    </p>
+  </section>
+
+  <!-- ============ 읽는 법 (용어) ============ -->
+  <section class="gloss">
+    <div class="glabel">읽는 법</div>
+    <h2>이 문서의 용어</h2>
+
+    <dl>
+      <dt>r  —  influence 벡터</dt>
+      <dd>
+        <div class="formula">(<b>α</b>W − I) r = −s          <b># 이걸 풀어서 r을 얻음</b>
+
+W[i,j] = 뉴런 j → i 시냅스 수     (unsigned, count_thresh=5)
+s      = seed 벡터 (ORN이면 1, 아니면 0)
+<b>α</b>      = λ_target / λ_max(W),   λ_target = 0.99
+−I     = leak 항
+
+동치 급수:  r = Σ<sub>k≥0</sub> (<b>α</b>W)<sup>k</sup> s     <b># 모든 경로 길이의 합</b></div>
+        <ul>
+          <li><code>r_ctrl</code> = 병변 없는 정상 상태, <code>r_les</code> = 병변 후.</li>
+          <li><strong>α는 온전한 W에서 한 번만 구해 모든 조건에 고정</strong> (함정 ① 참조).</li>
+        </ul>
+      </dd>
+
+      <dt>D_set  /  D_mag  —  병변 피해량</dt>
+      <dd>
+        <div class="formula">cohort = top<sub>N</sub>(r_ctrl | universe)        <b># control 기준 상위 N개, 고정</b>
+
+<b>D_set</b>      = 1 − |cohort ∩ top<sub>N</sub>(r_les)| / N          <b># 상위권 "명단"이 바뀐 정도</b>
+
+<b>D_mag_sum</b>  = 1 − ( Σ<sub>i∈cohort</sub> r_les[i] ) / ( Σ<sub>i∈cohort</sub> r_ctrl[i] )   <b># 영향력 가중 낙폭</b>
+
+<b>D_mag_mean</b> = (1/N) · Σ<sub>i∈cohort</sub> ( 1 − r_les[i] / r_ctrl[i] )     <b># 뉴런 동등 낙폭</b>
+
+<b>Importance</b> = ( D_set + D_mag ) / 2
+
+전부 [0, 1].   0 = 무피해,  1 = 완파.</div>
+        <ul>
+          <li><strong>코호트는 control 기준으로 고정</strong> — 병변 후 순위 밖으로 밀려난 뉴런도 명단에 남김.
+            <code>top_N(r_les)</code>로 잡으면 <strong>가장 크게 다친 뉴런이 빠져나가</strong> 낙폭을 과소평가함.</li>
+          <li><code>top_N(r_les)</code>는 <strong>D_set에만</strong> 등장. D_mag의 두 합은 인덱스 집합이 둘 다 cohort.</li>
+          <li><strong>실제로는 D_mag가 혼자 순위를 결정함</strong> — <code>Importance ~ D_mag</code>의 ρ = 0.997.
+            D_set은 값이 너무 작아(최대 0.022) 평균에 묻힘. 그리고 <code>D_mag_sum</code>과 <code>D_mag_mean</code>은
+            ρ = <strong>1.000</strong>으로 완전히 같은 순위를 냄 (§05 상관행렬).</li>
+        </ul>
+      </dd>
+
+      <dt>ρ  —  Spearman 순위 상관</dt>
+      <dd>
+        <div class="formula"><b>ρ</b> = corr( rank(x), rank(y) )        <b># 값이 아니라 "등수"끼리의 Pearson 상관</b>
+
+동점이 없을 때:
+<b>ρ</b> = 1 − 6·Σ d<sub>i</sub>² / ( n·(n² − 1) )
+
+d<sub>i</sub> = 항목 i의 두 순위표상 등수 차이
+n  = 항목 수 (여기서는 glomerulus 54개)
+
+<b>ρ</b> = +1 : 두 순위가 완전히 같음
+<b>ρ</b> =  0 : 무관
+<b>ρ</b> = −1 : 정반대</div>
+        <ul>
+          <li>값의 크기가 아니라 <strong>순서만</strong> 비교하므로, 단위가 달라도 쓸 수 있음.</li>
+        </ul>
+      </dd>
+
+      <dt>자기 PN</dt>
+      <dd>
+        <div class="formula">자기PN(g) = { p ∈ PN대상(g)  :  cell_type(p).split('_')[0] == g }
+
+예:  cell_type = "DA1_lPN"  →  소속 = DA1
+     cell_type = "M_lvPNm46" →  소속 = M  (다중 glomerulus, 특정 소속 없음)
+
+전체 862 슬롯 중 자기 PN = <b>171</b></div>
+        <ul>
+          <li><code>neuron.csv</code>는 "glomerulus <em>g</em>에 <strong>수상돌기를 둔</strong> 뉴런" 목록 —
+            <strong>소속</strong> 목록이 아님.</li>
+          <li>DL2d 아래 등재된 PN 31개의 실제 구성:
+            <ul>
+              <li><code>DL2d_adPN</code>, <code>DL2d_vPN</code> → <strong>9개</strong> = 자기 PN</li>
+              <li><code>DL2v_adPN</code>×4, <code>VL2a_vPN</code>×3, <code>DP1l_adPN</code> … → <strong>남의 glomerulus PN</strong></li>
+              <li><code>M_adPNm8</code>, <code>M_lvPNm46</code> … → <strong>다중 glomerulus PN</strong></li>
+            </ul>
+          </li>
+          <li>핵심: <strong>"g에 가지가 있다" ≠ "g 소속이다".</strong></li>
+        </ul>
+      </dd>
+
+      <dt>단조성 (monotonicity)</dt>
+      <dd>
+        <div class="formula"><b>D(A ∪ B)  ≥  max( D(A), D(B) )</b>          <b># 반드시 참이어야 함</b>
+
+증명:  W ≥ 0  (unsigned)
+      r = Σ<sub>k</sub> (<b>α</b>W)<sup>k</sup> s
+      열을 더 0으로 만듦  →  급수에서 항을 더 뺌
+      →  r은 감소만 가능  →  D는 증가만 가능  ∎</div>
+        <ul>
+          <li>→ <strong>발견이 아니라 자기검증 장치.</strong> 조건을 뒤섞거나, 병변 집합을 잘못 만들거나,
+            solve가 조용히 틀린 답을 내면 <strong>이 부등식이 깨짐</strong>.</li>
+          <li>실제로 <strong>α를 고정하기 전에는 깨졌고, 그게 함정 ①을 잡아낸 단서</strong>였음.</li>
+        </ul>
+      </dd>
+    </dl>
+  </section>
+
+  <!-- ============ 모델 ============ -->
+  <section>
+    <div class="snum">01</div>
+    <h2>모델과 병변 정의</h2>
+
+    <h3>정상 상태</h3>
+    <ul>
+      <li>선형 동역학의 정상 상태를 풂: <code>(αW − I) r = −s</code>.</li>
+      <li><code>W[i,j]</code> = 뉴런 <em>j</em> → <em>i</em> 시냅스 수 (unsigned, <code>count_thresh=5</code>).</li>
+      <li><code>α = λ_target / λ_max(W)</code>, <code>λ_target = 0.99</code>. <code>−I</code>는 leak 항.</li>
+      <li>Seed <code>s</code> = ORN 2,931개 (<code>orn.txt</code> 2,971개 중 W에 존재하는 것).</li>
+    </ul>
+
+    <h3>병변</h3>
+    <ul>
+      <li><strong>엣지 수준</strong> (최종 채택): glomerulus <em>g</em>의 ORN이 내보내는 <strong>모든 시냅스 제거</strong>.</li>
+      <li>ORN은 <code>cell_type = ORN_&lt;glom&gt;</code>으로 <strong>정확히 하나의</strong> glomerulus에만 속함.</li>
+      <li>→ ORN→X 엣지 19,245개가 각각 <strong>정확히 하나의</strong> glomerulus에 귀속.
+        두 glomerulus의 엣지 집합 중복은 <strong>구조적으로 0</strong>.</li>
+      <li>다중-glomerulus PN은 <strong>죽지 않음</strong>. <em>g</em>로부터의 입력만 잃고, 다른 입력과 자기 출력은 전부 유지.</li>
+    </ul>
+  </section>
+
+  <!-- ============ 함정 1 ============ -->
+  <section>
+    <div class="snum">02</div>
+    <h2>함정 ①  —  α를 재계산하면 실험이 무의미해짐</h2>
+
+    <div class="trap">
+      <div class="trap-label">Silent failure</div>
+      <div class="formula"><b>라이브러리 기본값 (틀림):</b>
+    <b>α</b>_lesion = 0.99 / λ_max( W_lesion )      <b># 병변된 W에서 매번 다시 계산</b>
+
+<b>이 스크린 (맞음):</b>
+    <b>α</b>_fixed  = 0.99 / λ_max( W_intact )      <b># 온전한 W에서 한 번만, 전 조건 고정</b></div>
+      <ul>
+        <li>병변을 가하면 <code>λ_max</code>가 <strong>떨어짐</strong> → <code>α_lesion</code>이 <strong>커짐</strong>
+          → 살아남은 시냅스가 전부 <strong>증폭됨</strong>.</li>
+        <li>그리고 그 증폭량이 <strong>병변의 중요도에 비례</strong> —
+          중요한 걸 끊을수록 λ_max가 많이 떨어지고, 그만큼 α가 크게 보정됨.</li>
+        <li>→ <strong>측정하려는 효과를 거의 정확히 상쇄함.</strong></li>
+      </ul>
+    </div>
+
+    <h3>실측 — 같은 병변, α 처리만 다르게</h3>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Glomerulus</th>
+            <th>α 고정 → D<br><span class="sub">진짜 값</span></th>
+            <th>α 재계산 → D<br><span class="sub">라이브러리 기본값</span></th>
+            <th>남은 비율</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="top"><td class="g">DL2d</td><td>0.5894</td><td>0.0034</td><td style="color:var(--sever);font-weight:700">0.6%</td></tr>
+          <tr class="top"><td class="g">VC5</td><td>0.4884</td><td>0.0045</td><td style="color:var(--sever);font-weight:700">0.9%</td></tr>
+          <tr class="top"><td class="g">DP1l</td><td>0.4840</td><td>0.0000</td><td style="color:var(--sever);font-weight:700">0.0%</td></tr>
+          <tr class="top"><td class="g">DL2v</td><td>0.4618</td><td>0.0032</td><td style="color:var(--sever);font-weight:700">0.7%</td></tr>
+          <tr><td class="g" style="color:var(--neutral)">54개 전체</td><td>0.016 – 0.589</td><td>0.000 – 0.023</td><td style="font-weight:700">평균 4.4%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cap">
+      D = 병변으로 상위권 influence가 떨어진 정도 (0 = 무피해, 1 = 완파). 정의식은 「읽는 법」 참조.
+    </p>
+
+    <ul>
+      <li><strong>측정값 D의 95.6%가 증발함</strong> — 평균적으로 원래의 4.4%만 남음.</li>
+      <li>그런데 더 나쁜 건, <strong>남은 4.4%가 진짜 D와 상관이 없다는 것</strong> (ρ = <strong>−0.06</strong>).
+        <ul>
+          <li>크기만 줄어든 게 아니라 <strong>순서가 뒤죽박죽</strong>이 됨.</li>
+          <li>DL2d는 진짜로 가장 교란적인데(0.589) 거의 0으로 뭉개지고, 원래 별거 아니던 놈이 위로 올라옴.</li>
+          <li>→ <strong>"효과가 작게 측정된다"가 아니라 "아무것도 측정하지 못한다".</strong></li>
+        </ul>
+      </li>
+      <li>6개 glomerulus는 D가 <strong>음수</strong>로 나옴 — 병변이 influence를 <em>증가</em>시킴 (물리적으로 불가능).</li>
+      <li><strong>병변이 작을수록 더 심각해짐</strong> — α 드리프트의 절대 크기(~1%)는 작지만,
+        재려는 D도 작아서 <strong>비율로는 전부</strong>.</li>
+    </ul>
+
+    <div class="verdict">
+      <p>→ 온전한 W에서 α를 <strong>한 번만</strong> 구해 모든 조건에 고정. 그러면 control과 lesion 사이에 달라지는 것은 silence된 열의 제거뿐.</p>
+    </div>
+
+    <ul>
+      <li>부수 효과 (강력한 검증 장치): α가 고정이면 unsigned 모드에서
+        <code>r_lesion ≤ r_control</code>이 <strong>모든 뉴런에서 정확히</strong> 성립.
+        <ul>
+          <li><code>W ≥ 0</code>이고 <code>r = Σ(αW)ᵏ s</code> → 열 제거는 급수에서 항을 빼는 것뿐.</li>
+          <li>실측 최대 비율 <strong>1.00000000</strong>. α가 움직이면 이 성질이 깨짐.</li>
+        </ul>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ============ 함정 2 ============ -->
+  <section>
+    <div class="snum">03</div>
+    <h2>함정 ②  —  뉴런을 죽이면 병변이 glomerulus에 귀속되지 않음</h2>
+
+    <div class="trap">
+      <div class="trap-label">Attribution contamination</div>
+      <ul>
+        <li><code>neuron.csv</code>의 PN 대상 862슬롯 중, 그 glomerulus에 <strong>실제로 속하는 PN은 171개뿐</strong>.</li>
+        <li>나머지는 다중-glomerulus PN(<code>M_*</code>)이거나 <strong>다른 glomerulus의 PN</strong>.</li>
+        <li><strong>12개 glomerulus는 자기 PN이 0개</strong> (DM1, VA6, VA2, VA7l, VM6l/m/v …).</li>
+      </ul>
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Glomerulus</th><th>대상 PN</th><th>그중 자기 PN</th><th>구성</th></tr></thead>
+        <tbody>
+          <tr><td class="g">DL2d</td><td>31</td><td style="color:var(--sever);font-weight:700">9</td><td style="text-align:left;white-space:normal">M_adPNm8, DL2v_adPN×4, VL2a_vPN×3, DP1l_adPN …</td></tr>
+          <tr><td class="g">VC5</td><td>30</td><td style="color:var(--sever);font-weight:700">1</td><td style="text-align:left">거의 전부 남의 PN</td></tr>
+          <tr><td class="g">VM6</td><td>18</td><td style="color:var(--sever);font-weight:700">1</td><td style="text-align:left">VM6_adPN 하나뿐</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ul>
+      <li>결과: <code>Spearman(importance, 대상 PN 총수) = +0.580</code> vs
+        <code>Spearman(importance, 자기 PN 수) = +0.117</code>.</li>
+      <li>즉 순위는 <strong>"그 glomerulus에 얼마나 많은 회로가 가지를 뻗고 있나"</strong>를 재고 있었지,
+        <strong>"그 glomerulus 고유의 출력 경로가 얼마나 중요한가"</strong>를 재고 있지 않았음.</li>
+      <li>엄격한 uniglomerular 변종은 <strong>만들 수 없음</strong> — 12개가 빈 집합.</li>
+    </ul>
+
+    <div class="verdict">
+      <p>→ 뉴런이 아니라 <strong>시냅스</strong>를 자르면 문제가 사라짐. ORN 쪽은 귀속이 모호하지 않기 때문.</p>
+    </div>
+  </section>
+
+  <!-- ============ 지표 ============ -->
+  <section>
+    <div class="snum">04</div>
+    <h2>지표</h2>
+
+    <p><em>D_set · D_mag · Importance의 정의식은 위 「읽는 법」 참조. 여기서는 그 식이 <strong>어느 뉴런 집합 위에서</strong>
+      계산되는지를 고정함.</em></p>
+
+    <h3>Universe — 순위를 매기는 뉴런 집합. 모든 조건에서 동일해야 함</h3>
+    <div class="formula">universe = 전체 뉴런 (150,299)
+         − seed ORN                (2,931)   <b># s로 직접 구동됨 → 자명하게 상위권</b>
+         − 어떤 조건에서든 silence되는 뉴런  (781)   <b># 점수가 병변의 산물</b>
+         − r_ctrl == 0 인 뉴런                <b># D_mag_mean의 0으로 나누기 방지</b>
+         = <b>126,860</b></div>
+    <ul>
+      <li>조건마다 universe가 다르면 <strong>순위를 비교할 수 없음</strong> → 한 번 정해 전부에 고정.</li>
+    </ul>
+
+    <h3>N (상위 몇 개를 볼 것인가)</h3>
+    <ul>
+      <li><strong>N = 500</strong>이 헤드라인.</li>
+      <li><strong>N 선택이 결과를 만들지 않음</strong> — N을 바꿔가며 매긴 순위끼리의 ρ:
+        <code>0.930</code>(N=50) ~ <code>0.997</code>(N=250·1000). 즉 어떤 N을 골라도 거의 같은 순위.</li>
+    </ul>
+  </section>
+
+  <!-- ============ 결과 ============ -->
+  <section>
+    <div class="snum">05</div>
+    <h2>최종 결과 — 엣지 수준 순위 (54개 전체)</h2>
+
+    <div class="scroll">
+      <table id="rank">
+        <thead>
+          <tr>
+            <th>#</th><th>Glomerulus</th><th>ORN 수</th><th>엣지 수</th><th>시냅스 수</th>
+            <th>D_set<br><span class="sub">명단 변화</span></th>
+            <th>D_mag<br><span class="sub">점수 낙폭</span></th>
+            <th>Importance<br><span class="sub">(D_set+D_mag)/2</span></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="cap">
+      각 행 = glomerulus 하나의 ORN 시냅스를 전부 잘랐을 때의 결과. scope = <code>orn</code>, N = 500.
+      <strong>ORN 수</strong>는 그 glomerulus의 수용 뉴런 개수, <strong>엣지 수</strong>는 그 ORN들이 만드는 연결 개수,
+      <strong>시냅스 수</strong>는 그 연결들의 총 시냅스 개수(= 실제로 잘라낸 양).
+      막대는 최대값(DP1l = 0.1129) 기준 상대 길이. 상위 6개 강조.
+    </p>
+
+    <h3>이 순위를 읽는 법</h3>
+    <ul>
+      <li><strong>순위 ≈ 시냅스 개수 순위</strong> — <code>ρ(Importance, ORN 시냅스 수) = +0.849</code>.
+        <ul>
+          <li>즉 <strong>시뮬레이션을 안 돌리고 ORN 시냅스 개수만 세도 순위가 거의 나옴.</strong></li>
+          <li>이게 <strong>틀렸다는 뜻은 아님</strong> — DP1l이 시냅스 13,195개를 갖는 건 진짜고, 끊으면 진짜로 더 망가짐.</li>
+          <li>다만 <strong>"숨은 요충지를 발견했다"는 주장은 못 함.</strong>
+            결과가 말하는 건 "입력 채널이 큰 놈이 크게 망가진다".</li>
+        </ul>
+      </li>
+      <li><strong>크기를 보정하지 않음.</strong> 엣지 수준에서 크기는 <strong>진짜 생물학</strong>이기 때문 —
+        "어느 glomerulus를 끊으면 가장 많이 망가지나"가 질문이면, 답에 크기가 포함되는 게 맞음.</li>
+      <li><strong>D_set이 거의 0</strong> (최대 0.022) → 병변은 상위권 <strong>명단을 뒤섞기보다 전체를 아래로 끌어내림</strong>.
+        Importance는 사실상 <code>D_mag</code>(점수 낙폭)가 지배.</li>
+    </ul>
+
+    <div class="verdict">
+      <p>→ "DP1l이 특별한 요충지다"가 <strong>아니라</strong> "DP1l이 뇌로 가장 많은 후각 입력을 보낸다"로 읽을 것.</p>
+    </div>
+
+    <h3>지표 간 상관행렬</h3>
+    <div class="scroll">
+      <table class="corr">
+        <thead>
+          <tr><th></th><th>ORN 수</th><th>엣지 수</th><th>시냅스 수</th><th>D_set</th><th>D_mag_sum</th><th>D_mag_mean</th><th>Importance</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="g">ORN 수</td><td class="dg">1.000</td><td>0.691</td><td>0.583</td><td>0.211</td><td class="lo">0.353</td><td class="lo">0.355</td><td class="lo">0.348</td></tr>
+          <tr><td class="g">엣지 수</td><td>0.691</td><td class="dg">1.000</td><td class="hi">0.956</td><td>0.405</td><td>0.765</td><td>0.766</td><td>0.753</td></tr>
+          <tr><td class="g">시냅스 수</td><td>0.583</td><td class="hi">0.956</td><td class="dg">1.000</td><td>0.490</td><td class="hi">0.859</td><td class="hi">0.860</td><td class="hi">0.849</td></tr>
+          <tr><td class="g">D_set</td><td>0.211</td><td>0.405</td><td>0.490</td><td class="dg">1.000</td><td>0.559</td><td>0.559</td><td>0.595</td></tr>
+          <tr><td class="g">D_mag_sum</td><td class="lo">0.353</td><td>0.765</td><td class="hi">0.859</td><td>0.559</td><td class="dg">1.000</td><td class="hi">1.000</td><td class="hi">0.997</td></tr>
+          <tr><td class="g">D_mag_mean</td><td class="lo">0.355</td><td>0.766</td><td class="hi">0.860</td><td>0.559</td><td class="hi">1.000</td><td class="dg">1.000</td><td class="hi">0.997</td></tr>
+          <tr><td class="g">Importance</td><td class="lo">0.348</td><td>0.753</td><td class="hi">0.849</td><td>0.595</td><td class="hi">0.997</td><td class="hi">0.997</td><td class="dg">1.000</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cap">Spearman ρ. n = 54. <span class="sw hi"></span> ≥ 0.85 &nbsp; <span class="sw lo"></span> ≤ 0.40</p>
+
+    <ul>
+      <li><strong>D_mag_sum ≡ D_mag_mean</strong> — ρ = <strong>1.000</strong>. 두 가중 방식(영향력 가중 / 뉴런 동등)이
+        <strong>완전히 같은 순위</strong>를 냄. 둘 다 계산해 저장했지만 <strong>구분이 무의미했음</strong>. 하나만 쓰면 됨.</li>
+      <li><strong>Importance ≈ D_mag</strong> — ρ = <strong>0.997</strong>.
+        <ul>
+          <li>D_set은 D_mag와 <em>다른 것</em>을 재긴 함 (ρ = 0.559로 중간).</li>
+          <li>그러나 값 자체가 너무 작아(최대 0.022) 평균에 묻힘.</li>
+          <li>→ <code>(D_set + D_mag)/2</code>라는 식은 사실상 장식이고, <strong>순위는 D_mag가 혼자 결정</strong>.</li>
+        </ul>
+      </li>
+      <li><strong>크기 중에서는 ORN 수가 가장 나쁜 예측자</strong> — 시냅스 수(0.859) &gt; 엣지 수(0.765) ≫ <strong>ORN 수(0.353)</strong>.
+        <ul>
+          <li>ORN을 <em>몇 마리</em> 갖고 있느냐는 별로 안 중요함.
+            그 ORN들이 <strong>시냅스를 얼마나 많이 뻗느냐</strong>가 중요함.</li>
+          <li><code>DM3</code>: ORN <strong>41개</strong>인데 시냅스 885개 → D = 0.0023 (거의 꼴찌).</li>
+          <li><code>DP1m</code>: ORN <strong>13개</strong>인데 시냅스 6,207개 → D = 0.1218 (<strong>2위</strong>).</li>
+          <li>시냅스당 효율로 줄 세우면 <strong>DP1m이 1위</strong> (1,000시냅스당 0.0196) — 크기 대비 가장 강력한 채널.</li>
+        </ul>
+      </li>
+      <li>엣지 수와 시냅스 수는 ρ = 0.956으로 <strong>거의 같은 정보</strong> (독립적인 예측자가 아님).</li>
+    </ul>
+  </section>
+
+  <!-- ============ 뉴런 vs 엣지 ============ -->
+  <section>
+    <div class="snum">06</div>
+    <h2>뉴런 수준 결과는 무엇이었나</h2>
+
+    <div class="tiles">
+      <div class="tile"><div class="v bad">ρ +0.33</div><div class="k">두 실험이 매긴<br>54개 순위의 일치도</div></div>
+      <div class="tile"><div class="v">1위 → 13위</div><div class="k">DL2d의 추락<br>뉴런 수준 → 엣지 수준</div></div>
+      <div class="tile"><div class="v">29</div><div class="k">DL2d의 ORN 수<br>(54개 중 하위권)</div></div>
+    </div>
+
+    <ul>
+      <li><strong>두 실험이 서로 다른 답을 냄</strong> — 같은 54개 glomerulus를 매긴 순위인데 ρ = +0.33 (1이면 완전 일치).</li>
+      <li>엣지 수준이 <strong>깨끗한 쪽</strong>이므로, 이 불일치는 <strong>뉴런 수준 순위가 오염(함정 ②)에 끌려다녔다는 증거</strong>.</li>
+      <li>가장 극적인 예 — <strong>DL2d</strong>:
+        <ul>
+          <li>뉴런 수준 <strong>1위</strong> → 엣지 수준 <strong>13위</strong> (D_mag 0.0248).</li>
+          <li>ORN이 <strong>29개뿐</strong>이라, <strong>자기 입력을 끊으면 거의 안 움직임</strong>.</li>
+          <li>→ 뉴런 수준 1위는, DL2d에 가지를 뻗은 <strong>남의 PN 22개를 같이 죽여서</strong> 나온 값이었음.</li>
+        </ul>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ============ 폐기 ============ -->
+  <section>
+    <div class="snum">07</div>
+    <h2>폐기한 변종 — 둘 다 포화</h2>
+
+    <h3><code>all</code> — non-seed 대상 전부 (뉴런 수준) <span class="tag drop">폐기</span></h3>
+    <ul>
+      <li>D_mag_sum: min 0.782 / <strong>중앙 0.965</strong> / max 0.981 — 구분력 없음.</li>
+      <li>원인: 국소 뉴런(LN)이 뉴런당 평균 <strong>9.1개</strong> glomerulus에 걸침. 한 뉴런은 54개 중 <strong>51개</strong>에 등장.</li>
+      <li>→ 어떤 glomerulus를 죽이든 <strong>공유 LN 뭉치</strong>가 함께 날아가 54개 조건이 서로 닮아버림.</li>
+    </ul>
+
+    <h3><code>orn_local</code> — ORN 엣지 + glomerulus 내부 엣지 (엣지 수준) <span class="tag drop">폐기</span></h3>
+    <ul>
+      <li>D_mag_sum: min 0.388 / <strong>중앙 0.888</strong> / max 0.943. <strong>46/54가 D &gt; 0.80</strong>.</li>
+      <li>glomerulus당 국소 엣지를 79~4,100개(중앙값 1,507) 자르는데, 그게 AL의 <strong>공유 내부 배선</strong>.</li>
+      <li>시냅스 좌표가 없어 <em>"둘 다 g에 가지를 뻗었으면 g 안의 시냅스"</em> 휴리스틱을 썼고, <strong>실패</strong>.</li>
+      <li><code>all</code> 변종과 <strong>똑같은 실패 양상</strong>.</li>
+    </ul>
+
+    <h3><code>orn</code> — ORN 엣지만 <span class="tag keep">채택</span></h3>
+    <ul>
+      <li>D_mag_sum: 0.0004 – <strong>0.204</strong>. 건강한 동적 범위.</li>
+      <li>N에 강건 (ρ = 0.930 ~ 0.997). 귀속 모호성 0.</li>
+    </ul>
+  </section>
+
+  <!-- ============ 조합 ============ -->
+  <section>
+    <div class="snum">08</div>
+    <h2>조합 (쌍 1,431개)</h2>
+
+    <div class="tiles">
+      <div class="tile"><div class="v good">0</div><div class="k">단조성<br>위반</div></div>
+      <div class="tile"><div class="v">0 / 1431</div><div class="k">초가법적<br>(synergy &gt; 0)</div></div>
+      <div class="tile"><div class="v">720 / 720</div><div class="k">대상 중복 0인 쌍도<br>전부 중복적</div></div>
+      <div class="tile"><div class="v">ρ −0.79</div><div class="k">중복성 ↔ 병변 강도<br>(포화 효과)</div></div>
+    </div>
+
+    <h3>시너지 정의식</h3>
+    <div class="formula">R(X) = 1 − D_mag_sum(X)              <b># 잔존율: 상위권 영향력 중 살아남은 비율</b>
+
+<b>synergy</b>(A,B) = R(A)·R(B) − R(A∪B)     <b># 곱셈 독립 모델 대비 초과 파괴량</b>
+
+synergy &gt; 0 : 조합이 독립 가정보다 <b>더</b> 파괴적  (시너지)
+synergy &lt; 0 : 조합이 독립 가정보다 <b>덜</b> 파괴적  (중복)</div>
+    <ul>
+      <li><strong>초가법적(synergy &gt; 0)인 쌍은 1,431개 중 0개.</strong> 중앙값 −0.023.
+        즉 모든 쌍이 예외 없이 <strong>중복적</strong>.</li>
+      <li>단, 생물학적 발견으로 읽기 전에:
+        <ul>
+          <li><strong>포화 효과가 큼</strong> — <code>ρ(synergy, D_a+D_b) = −0.788</code>. 병변이 강할수록 더 중복적으로 보임
+            (이미 절반을 날렸으면 두 번째가 없앨 게 남아있지 않음).</li>
+          <li>다만 <strong>대상이 전혀 겹치지 않는 720쌍도 전부(720/720) 중복적</strong> → 경로 수렴이 실재함.</li>
+          <li>곱셈 독립 모델 자체가 모델링 선택. 가법 모델은 D가 1을 넘어(DL2d+VC5 = 1.08) [0,1] 경계를 위반.</li>
+        </ul>
+      </li>
+      <li><strong>VM6 계열은 사실상 같은 병변</strong> — VM6/VM6l/VM6m/VM6v는 PN을 9~13개씩 공유(Jaccard 0.32~0.57),
+        D도 0.364~0.396으로 거의 같고, 조합해도 D가 <strong>전혀 늘지 않음</strong>
+        (VM6l+VM6m: 각각 0.3691, 0.3690 → 합쳐도 0.3691). 독립적인 발견이 아님.</li>
+      <li><em>주: 조합은 뉴런 수준(pn)에서만 수행. 엣지 수준 조합은 미실행.</em></li>
+    </ul>
+  </section>
+
+  <!-- ============ 검증 ============ -->
+  <section>
+    <div class="snum">09</div>
+    <h2>검증</h2>
+    <ul>
+      <li><em>아래는 전부 <strong>발견이 아니라 자기검증</strong> — 수학적으로 참이어야 하는 것들이고,
+        깨지면 코드 버그라는 뜻.</em></li>
+      <li><strong>빈 병변 = control</strong> — 정확히 일치 (bit-exact).</li>
+      <li><strong>단조성</strong> — <code>D(A∪B) ≥ max(D(A), D(B))</code>: 1,431쌍 전부 <strong>위반 0건</strong>.
+        <ul>
+          <li>A와 B를 같이 끊으면 하나만 끊었을 때보다 반드시 더 망가져야 함 (열을 더 0으로 만드는 건
+            급수에서 항을 더 빼는 것뿐이므로).</li>
+          <li><strong>α 고정 전에는 이게 깨졌고, 그게 함정 ①을 잡아낸 단서</strong>였음.</li>
+        </ul>
+      </li>
+      <li><strong>α 고정 검증</strong> — <code>max(r_lesion / r_control)</code> over 전 뉴런 = <strong>1.00000000</strong>
+        (병변이 influence를 <em>늘릴</em> 수 없어야 함).</li>
+      <li><strong>엣지 기계 교차검증</strong> — <code>orn</code> scope의 엣지 제거가 열 0으로 만들기와 <strong>정확히 일치</strong>해야 함
+        (ORN의 출력 전부 = ORN의 열). 스크립트가 실제로 대조하고 불일치 시 즉시 중단. <strong>통과</strong>.</li>
+      <li><strong>모든 지표 ∈ [0,1]</strong> — clip 전 원값 기준.</li>
+      <li>전체 실행을 <code>-W error::RuntimeWarning</code>으로 수행 — 경고 하나라도 뜨면 중단. <strong>무경고 완주</strong>.</li>
+    </ul>
+  </section>
+
+  <!-- ============ 한계 ============ -->
+  <section>
+    <div class="snum">10</div>
+    <h2>한계</h2>
+    <ul>
+      <li><strong>결과는 모델상 influence 분포의 변화이지, 행동 예측이 아님.</strong></li>
+      <li>ORN 88개는 <code>ORN_&lt;glom&gt;</code> 형식의 <code>cell_type</code>이 없어 glomerulus 매핑에서 제외.</li>
+      <li>seed ID 40개, 대상 ID 3개는 W에 없어 제외 (<code>target_audit.csv</code>에 기록).</li>
+      <li>glomerulus 내부(AL 국소 회로) 병변은 <strong>측정 불가</strong> — 엣지 리스트에 시냅스 <strong>공간 좌표가 없음</strong>.
+        <code>orn_local</code> 휴리스틱은 포화로 실패.</li>
+      <li>순위는 시냅스 수와 강하게 연동(ρ=0.849). "크기 대비 특별한 곳"은 <strong>이 스크린이 답하지 않는 질문</strong>.</li>
+      <li>조합 분석은 뉴런 수준(오염된 대상 정의)에서만 수행됨.</li>
+      <li>unsigned 모드 — 억제성 시냅스를 음수로 다루지 않음.</li>
+    </ul>
+  </section>
+
+  <!-- ============ 재현 ============ -->
+  <section>
+    <div class="snum">11</div>
+    <h2>재현</h2>
+<pre><span class="c"># 환경: WSL Ubuntu, ~/miniforge3/envs/fly_neuron  (petsc4py / slepc4py)</span>
+python -m glom_screen.check        <span class="c"># 불변식 검증 — 먼저 통과해야 함</span>
+python -m glom_screen.run_edges    <span class="c"># ★ 엣지 수준, 최종 결과      (~35초)</span>
+python -m glom_screen.alpha_probe  <span class="c">#   함정 ①의 근거 재현</span>
+python -m glom_screen.run          <span class="c">#   뉴런 수준 (대조군)          (~40초)</span>
+python -m glom_screen.combos       <span class="c">#   쌍 1,431개                  (~7분)</span>
+python -m glom_screen.report       <span class="c">#   순위 + 강건성 진단</span></pre>
+
+    <ul>
+      <li><strong>시뮬레이터 본체(<code>InfluenceCalculator/</code>)는 수정하지 않음.</strong>
+        α 고정이 필요했지만 라이브러리를 고치는 대신 <code>glom_screen/engine.py</code>에서
+        <code>calculate_influence</code>를 우회.</li>
+      <li>산출물: <code>edges.csv</code>(★ 최종) · <code>singles.csv</code> · <code>pairs_pn.csv</code> ·
+        <code>alpha_probe.csv</code> · <code>target_audit.csv</code> · <code>cache/</code>(조건별 raw 벡터, 지표 재정의 시 재solve 불필요).</li>
+    </ul>
+  </section>
+
+  <footer>
+    BANC 888 · InfluenceCalculator · λ_target 0.99 · count_thresh 5 · N 500
+  </footer>
+</div>
+
+<script>
+  const D = [["DP1l",48,722,13195,0.022,0.2038,0.1129],["DP1m",13,269,6207,0.012,0.12181,0.0669],["VL2p",49,549,7829,0.004,0.08834,0.04617],["VA2",85,588,8273,0.002,0.0836,0.0428],["DM1",89,513,7885,0.006,0.07503,0.04052],["V",91,869,10673,0.004,0.06513,0.03457],["DL2v",32,518,7588,0,0.04597,0.02299],["DM4",60,315,4960,0.004,0.04038,0.02219],["VM6v",31,667,10387,0.002,0.04189,0.02195],["VC1",34,352,4935,0,0.04386,0.02193],["VA3",63,522,7417,0,0.03956,0.01978],["VL1",127,766,7941,0,0.03218,0.01609],["DL2d",29,336,4532,0.002,0.02475,0.01338],["VM5v",45,436,6008,0,0.02614,0.01307],["VC4",50,425,5471,0,0.02403,0.01201],["VC5",29,277,4850,0,0.02379,0.01189],["VA6",84,309,3779,0,0.02364,0.01182],["DC4",30,313,4687,0.002,0.02155,0.01177],["VM7d",33,333,5705,0.002,0.02143,0.01171],["VA4",45,280,3684,0.004,0.01932,0.01166],["DA1",206,1404,10522,0,0.02332,0.01166],["VL2a",102,350,3839,0.002,0.02073,0.01137],["VM5d",84,730,7704,0.002,0.0205,0.01125],["VA7m",41,303,3958,0.002,0.01895,0.01047],["VM3",61,358,4651,0.002,0.01883,0.01042],["VC3",42,401,5568,0,0.02002,0.01001],["VA1d",134,787,9207,0.002,0.01754,0.00977],["VA1v",164,1099,10293,0,0.01923,0.00961],["DC1",48,183,2509,0,0.01791,0.00895],["VC2",28,196,2443,0.002,0.01589,0.00894],["DC3",56,385,5006,0,0.01512,0.00756],["VA5",21,200,3267,0,0.01484,0.00742],["VM1",39,237,3368,0,0.01483,0.00741],["DC2",23,165,2009,0,0.01126,0.00563],["DL5",37,128,1853,0,0.00979,0.0049],["DM2",58,281,3970,0,0.00967,0.00483],["VM6l",36,121,1378,0,0.00936,0.00468],["VM7v",42,322,4493,0,0.00841,0.00421],["D",29,193,2623,0,0.00839,0.00419],["VM2",54,282,3581,0,0.00814,0.00407],["DA4m",60,132,1897,0,0.0078,0.0039],["VM6",11,99,1366,0,0.00717,0.00358],["DL1",40,143,1879,0,0.00685,0.00342],["DM5",59,261,2968,0.002,0.00469,0.00334],["VM6m",15,48,569,0,0.00529,0.00265],["DM6",53,289,3536,0,0.00505,0.00252],["VM4",61,331,2659,0,0.00457,0.00228],["DM3",41,58,885,0,0.00234,0.00117],["DA2",28,155,1373,0,0.00206,0.00103],["DL4",37,57,658,0,0.00118,0.00059],["DA3",14,42,297,0,0.00074,0.00037],["DA4l",27,32,443,0,0.00074,0.00037],["VA7l",1,9,104,0,0.00066,0.00033],["DL3",25,105,935,0,0.00041,0.00021]];
+  const max = D[0][6];
+  const n = v => v.toLocaleString('en-US');
+  document.querySelector('#rank tbody').innerHTML = D.map((r, i) => `
+    <tr class="${i < 6 ? 'top' : ''}">
+      <td style="color:var(--neutral)">${i + 1}</td>
+      <td class="g">${r[0]}</td>
+      <td>${n(r[1])}</td>
+      <td>${n(r[2])}</td>
+      <td>${n(r[3])}</td>
+      <td>${r[4].toFixed(3)}</td>
+      <td>${r[5].toFixed(4)}</td>
+      <td><span class="bar"><i style="width:${Math.max(1.5, (r[6] / max) * 68).toFixed(1)}px"></i><span>${r[6].toFixed(5)}</span></span></td>
+    </tr>`).join('');
+</script>
+
+</body>
+</html>
