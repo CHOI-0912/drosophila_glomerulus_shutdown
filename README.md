@@ -42,7 +42,6 @@ python -m glom_screen.report       # 순위 + 강건성 진단
 | `glom_screen_results/*.csv` | 실행 결과 (`edges.csv`가 최종) |
 | `library-guards.patch` | 라이브러리의 조용한 실패 2개를 막는 패치 |
 | `CHANGES.md` | 그 패치의 근거 |
-| `a.py` | 초기 탐색용 스크립트 (라벨 오류 있음, 참고용) |
 
 ## 핵심 결과 세 가지
 
