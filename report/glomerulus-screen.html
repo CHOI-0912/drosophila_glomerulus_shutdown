@@ -231,6 +231,43 @@
     display: inline !important;
   }
 
+  /* ---------- collapsible derivation ---------- */
+  .fold {
+    border: 1px solid var(--hair); border-radius: 5px;
+    background: var(--raised); margin: 1.5rem 0;
+  }
+  .fold > summary {
+    cursor: pointer; list-style: none; padding: .85rem 1.1rem;
+    font-weight: 600; font-size: .95rem; color: var(--signal);
+    display: flex; align-items: center; gap: .55rem;
+    border-radius: 5px;
+  }
+  .fold > summary::-webkit-details-marker { display: none; }
+  .fold > summary::before {
+    content: ""; flex: none; width: 0; height: 0;
+    border-left: 5px solid currentColor;
+    border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+    transition: transform .15s ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fold > summary::before { transition: none; }
+  }
+  .fold[open] > summary::before { transform: rotate(90deg); }
+  .fold[open] > summary { border-bottom: 1px solid var(--hair-soft); }
+  .fold > summary:hover { background: var(--signal-dim); }
+  .fold > summary:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
+  .fold > *:not(summary) { padding: 0 1.1rem; }
+  .fold > *:not(summary):first-of-type { padding-top: 1.1rem; }
+  .fold > *:not(summary):last-child { padding-bottom: 1.1rem; }
+  .fold .eq { margin-left: 0; margin-right: 0; background: var(--paper); }
+
+  @media print {
+    /* a folded derivation must still print -- force it open on paper */
+    .fold[open], .fold { border-color: #bbb; }
+    .fold > *:not(summary) { display: revert !important; }
+    .fold > summary::before { display: none; }
+  }
+
   /* ---------- tables ---------- */
   .scroll { overflow-x: auto; margin: 1.3rem 0; border: 1px solid var(--hair); border-radius: 5px; }
   table { border-collapse: collapse; width: 100%; font-size: .855rem; background: var(--raised); }
@@ -540,45 +577,47 @@
           덕분에 식이 통째로 접힌다.
         </p>
 
-        <h3>4. 유도</h3>
-        <p>
-          등수 차이 <var>d</var> = <var>R</var> − <var>S</var>를 제곱해서 더해 보자.
-        </p>
-        <div class="eq">
-          \[\sum d_i^{2} \;=\; \sum R_i^{2} \;-\; 2\sum R_i S_i \;+\; \sum S_i^{2}\]
-        </div>
-        <p>
-          여기가 핵심이다. <strong>두 순위표가 같은 숫자들의 순열이므로
-          Σ<var>R</var><sup>2</sup> = Σ<var>S</var><sup>2</sup>이다.</strong>
-          그래서 위 식을 Σ<var>RS</var>에 대해 풀 수 있다.
-        </p>
-        <div class="eq">
-          \[\sum R_i S_i \;=\; \sum R_i^{2} \;-\; \frac{1}{2}\sum d_i^{2}\]
-        </div>
-        <p>이걸 공분산에 넣는다.</p>
-        <div class="eq">
-          \[\operatorname{cov} \;=\; \frac{1}{n}\sum R_i S_i \;-\; \mu^{2}
-            \;=\; \underbrace{\left(\frac{1}{n}\sum R_i^{2} - \mu^{2}\right)}_{\textstyle \sigma^{2}}
-            \;-\; \frac{\sum d_i^{2}}{2n}\]
-          <div class="eqnote">앞의 괄호가 통째로 <em>σ</em><sup>2</sup>의 정의와 같다</div>
-        </div>
-        <div class="eq">
-          \[\operatorname{cov} \;=\; \sigma^{2} \;-\; \frac{\sum d_i^{2}}{2n}\]
-        </div>
-        <p>이제 <var>σ</var><sup>2</sup>으로 나누기만 하면 끝이다.</p>
-        <div class="eq">
-          \[\rho \;=\; \frac{\operatorname{cov}}{\sigma^{2}}
-            \;=\; 1 \;-\; \frac{\sum d_i^{2}}{2n\,\sigma^{2}}
-            \;=\; 1 \;-\; \frac{\sum d_i^{2}}{2n \cdot \dfrac{n^{2}-1}{12}}
-            \;=\; 1 \;-\; \frac{6 \sum d_i^{2}}{n\,(n^{2}-1)}\]
-        </div>
-        <div class="verdict">
+        <details class="fold">
+          <summary>4. 유도 — 실제로 접어 보이기</summary>
           <p>
-            <strong>6의 정체는 12 ÷ 2다.</strong> 12는 1..<var>n</var> 분산의 분모에서,
-            2는 제곱을 전개할 때 나온 계수에서 왔다. <strong>아무 의미도 없는 상수다.</strong>
+            등수 차이 <var>d</var> = <var>R</var> − <var>S</var>를 제곱해서 더해 보자.
           </p>
-        </div>
+          <div class="eq">
+            \[\sum d_i^{2} \;=\; \sum R_i^{2} \;-\; 2\sum R_i S_i \;+\; \sum S_i^{2}\]
+          </div>
+          <p>
+            여기가 핵심이다. <strong>두 순위표가 같은 숫자들의 순열이므로
+            Σ<var>R</var><sup>2</sup> = Σ<var>S</var><sup>2</sup>이다.</strong>
+            그래서 위 식을 Σ<var>RS</var>에 대해 풀 수 있다.
+          </p>
+          <div class="eq">
+            \[\sum R_i S_i \;=\; \sum R_i^{2} \;-\; \frac{1}{2}\sum d_i^{2}\]
+          </div>
+          <p>이걸 공분산에 넣는다.</p>
+          <div class="eq">
+            \[\operatorname{cov} \;=\; \frac{1}{n}\sum R_i S_i \;-\; \mu^{2}
+              \;=\; \underbrace{\left(\frac{1}{n}\sum R_i^{2} - \mu^{2}\right)}_{\textstyle \sigma^{2}}
+              \;-\; \frac{\sum d_i^{2}}{2n}\]
+            <div class="eqnote">앞의 괄호가 통째로 <em>σ</em><sup>2</sup>의 정의와 같다</div>
+          </div>
+          <div class="eq">
+            \[\operatorname{cov} \;=\; \sigma^{2} \;-\; \frac{\sum d_i^{2}}{2n}\]
+          </div>
+          <p>이제 <var>σ</var><sup>2</sup>으로 나누기만 하면 끝이다.</p>
+          <div class="eq">
+            \[\rho \;=\; \frac{\operatorname{cov}}{\sigma^{2}}
+              \;=\; 1 \;-\; \frac{\sum d_i^{2}}{2n\,\sigma^{2}}
+              \;=\; 1 \;-\; \frac{\sum d_i^{2}}{2n \cdot \dfrac{n^{2}-1}{12}}
+              \;=\; 1 \;-\; \frac{6 \sum d_i^{2}}{n\,(n^{2}-1)}\]
+          </div>
+          <div class="verdict">
+            <p>
+              <strong>6의 정체는 12 ÷ 2다.</strong> 12는 1..<var>n</var> 분산의 분모에서,
+              2는 제곱을 전개할 때 나온 계수에서 왔다. <strong>아무 의미도 없는 상수다.</strong>
+            </p>
+          </div>
 
+        </details>
         <h3>5. 더 직관적인 형태</h3>
         <p>
           순위가 정확히 뒤집혔을 때 Σ<var>d</var><sup>2</sup>가 최댓값에 도달한다.
@@ -1290,6 +1329,19 @@ python -m glom_screen.report</pre>
       <td>${r[5].toFixed(4)}</td>
       <td><span class="bar"><i style="width:${Math.max(1.5, (r[6] / max) * 68).toFixed(1)}px"></i><span>${r[6].toFixed(5)}</span></span></td>
     </tr>`).join('');
+</script>
+
+<script>
+  document.querySelectorAll('details.fold').forEach(function (d) {
+    d.addEventListener('toggle', function once() {
+      if (!d.open) return;
+      if (d.querySelector('mjx-container')) { d.removeEventListener('toggle', once); return; }
+      if (window.MathJax && MathJax.typesetPromise) {
+        MathJax.typesetPromise([d]).catch(function () {});
+      }
+      d.removeEventListener('toggle', once);
+    });
+  });
 </script>
 
 </body>
