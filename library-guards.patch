@@ -1,0 +1,248 @@
+diff --git a/InfluenceCalculator/InfluenceCalculator.py b/InfluenceCalculator/InfluenceCalculator.py
+index 7741c72..d927a32 100644
+--- a/InfluenceCalculator/InfluenceCalculator.py
++++ b/InfluenceCalculator/InfluenceCalculator.py
+@@ -1,5 +1,6 @@
+ import pandas as pd
+ import sqlite3
++import warnings
+ import numpy as np
+ from petsc4py import PETSc
+ from slepc4py import SLEPc
+@@ -7,6 +8,12 @@ from bidict import bidict
+ 
+ 
+ class InfluenceCalculator:
++    # Smallest largest-real-eigenvalue, as a fraction of ||W||_F, that is
++    # treated as a real recurrent mode rather than numerical noise from a
++    # (near-)nilpotent W.  See _normalize_W for why a bare `> 0` test is
++    # not enough.
++    _EIG_REL_FLOOR = 1e-3
++
+     def __init__(self, edgelist_df, meta_df=None, signed=False,
+                  count_thresh=5, syn_weight_measure='count',
+                  inhibitory_nts=None, excluded_nts=None,
+@@ -300,14 +307,57 @@ class InfluenceCalculator:
+ 
+         # Rescale so the largest real eigenvalue equals self.lambda_max
+         # exactly, then form W = alpha * W - I.
+-        if eig_val_largest > 0:
++        #
++        # The eigenvalue has to clear a floor proportional to ||W||, not
++        # merely be positive.  A purely feedforward W is nilpotent, so
++        # its true leading eigenvalue is exactly 0 -- but it is also
++        # defective, and eigenvalues of a defective matrix carry error on
++        # the order of eps**(1/m) for a Jordan block of size m, so SLEPc
++        # converges to a small *positive* value (~1e-5) rather than to 0.
++        # A bare `> 0` test lets that noise through, and alpha =
++        # lambda_max / 1e-5 then inflates W by ~1e4 and hands back
++        # influence scores of ~1e12 with no indication anything is wrong.
++        #
++        # Skipping the rescale is the right answer here, not an error:
++        # W - I is still non-singular and stable for a nilpotent W (every
++        # eigenvalue sits at -1) and the solve returns the exact Neumann
++        # sum.  What it does mean is that lambda_max stops being the
++        # amplification knob it is documented to be, so say so.
++        #
++        # Real recurrent connectomes clear the floor by orders of
++        # magnitude (BANC 0.087, C. elegans 0.175 in these units), while
++        # nilpotent noise lands near 1e-5.
++        fro_norm = W_norm.norm(PETSc.NormType.FROBENIUS)
++        if eig_val_largest > self._EIG_REL_FLOOR * fro_norm:
+             alpha = self.lambda_max / eig_val_largest
+             W_norm.scale(alpha)
++        else:
++            warnings.warn(
++                f"Largest real eigenvalue of W is {eig_val_largest:.6g}, "
++                f"which is negligible against ||W||_F={fro_norm:.6g}, so "
++                f"W was not rescaled and lambda_max={self.lambda_max} had "
++                f"no effect on this solve. Influence scores are still "
++                f"valid (they are the unamplified Neumann sum), but they "
++                f"are not normalised. Expected for a feedforward or "
++                f"near-acyclic connectome; otherwise it suggests a signed "
++                f"W whose recurrent modes have cancelled out.",
++                RuntimeWarning,
++                stacklevel=2,
++            )
+         W_norm.shift(-1.0)
+ 
+     @staticmethod
+     def _solve_lin_system(W_norm, s):
+         """Solves the system W_norm * x = s and returns x.
++
++        Raises RuntimeError if the Krylov solve fails to converge.  A
++        non-converged GMRES iterate is not a detectable failure
++        downstream: it carries no NaNs or infinities, its distribution
++        looks like a healthy influence vector, and its error is spread
++        across every neuron rather than concentrated in a few outliers.
++        The residual is the only thing that separates it from the true
++        solution, and PETSc has already computed it here -- so check it
++        here rather than shipping scores nobody can audit.
+         """
+         b = PETSc.Vec().createWithArray(s, comm=PETSc.COMM_SELF)
+ 
+@@ -320,6 +370,16 @@ class InfluenceCalculator:
+         x = W_norm.createVecRight()
+         ksp.solve(b, x)
+ 
++        reason = ksp.getConvergedReason()
++        if reason < 0:
++            raise RuntimeError(
++                f"Linear solve did not converge: KSP converged reason "
++                f"{reason} after {ksp.getIterationNumber()} iterations. "
++                f"The influence scores from this solve would be wrong in "
++                f"a way that is invisible in the output, so no result is "
++                f"returned. Check that lambda_max is comfortably below 1."
++            )
++
+         return x
+ 
+     def _set_columns_to_zero(self, silenced_W_idcs):
+diff --git a/tests/test_influence_calculator.py b/tests/test_influence_calculator.py
+index f1bf07c..658efa6 100644
+--- a/tests/test_influence_calculator.py
++++ b/tests/test_influence_calculator.py
+@@ -257,6 +257,143 @@ def test_signed_calculate_influence_can_yield_negative(
+     assert (df['Influence_score_(signed)'] < 0).any()
+ 
+ 
++# ---------------------------------------------------------------------
++# Silencing
++# ---------------------------------------------------------------------
++
++def _cycle_with_sink():
++    """A 3-cycle 0 -> 1 -> 2 -> 0 plus a sink node 3 fed by node 2.
++
++    adjacency[i, j] is the weight from j to i, so node 3's column is
++    all-zero: it has no outgoing edges.  The 3-cycle keeps the largest
++    real eigenvalue positive (it is 1), so _normalize_W takes its
++    rescaling branch as it would on a real connectome.
++    """
++    adj = np.zeros((4, 4))
++    adj[1, 0] = adj[2, 1] = adj[0, 2] = 1.0   # 3-cycle
++    adj[3, 2] = 1.0                           # 2 -> 3, node 3 is a sink
++    return adj
++
++
++def test_silencing_output_free_neuron_matches_no_silencing():
++    """Silencing a neuron that has no outgoing edges zeroes an
++    already-zero column, leaving W bit-for-bit unchanged -- so the
++    influence scores must match the unsilenced solve exactly.
++
++    This pins down the step that both branches of calculate_influence
++    must share: _normalize_W, which rescales W to lambda_max and then
++    subtracts the identity.  If the silenced branch ever skipped it and
++    solved W r = -s instead of (alpha * W - I) r = -s, these two results
++    would diverge by orders of magnitude even though W is identical.
++    """
++    _require_petsc_slepc()
++    ic = InfluenceCalculator.from_numpy(_cycle_with_sink(), count_thresh=0,
++                                        lambda_max=0.5)
++
++    col = 'Influence_score_(unsigned)'
++    base = ic.calculate_influence([0], adjust=False).sort_values('id')
++    sil = ic.calculate_influence([0], silenced_neurons=[3],
++                                 adjust=False).sort_values('id')
++
++    np.testing.assert_allclose(base[col].to_numpy(), sil[col].to_numpy(),
++                               rtol=1e-6, atol=1e-12)
++
++
++def test_silencing_blocks_downstream_propagation():
++    """Node 3 is reachable from seed 0 only through node 2, so silencing
++    node 2 must strip node 3 of essentially all of its influence.
++    """
++    _require_petsc_slepc()
++    ic = InfluenceCalculator.from_numpy(_cycle_with_sink(), count_thresh=0,
++                                        lambda_max=0.5)
++    col = 'Influence_score_(unsigned)'
++
++    def score(df, node):
++        return df.loc[df['id'] == node, col].iloc[0]
++
++    base = ic.calculate_influence([0], adjust=False)
++    sil = ic.calculate_influence([0], silenced_neurons=[2], adjust=False)
++
++    assert score(base, 3) > 0
++    assert score(sil, 3) < score(base, 3)
++    assert score(sil, 3) == pytest.approx(0.0, abs=1e-12)
++
++
++def test_silencing_only_seeds_is_a_no_op(celegans_edgelist_df,
++                                         celegans_meta_df):
++    """calculate_influence drops seed neurons from the silenced set, so
++    asking to silence nothing but the seeds must leave the result
++    identical to not silencing at all.
++    """
++    _require_petsc_slepc()
++    ic = InfluenceCalculator(celegans_edgelist_df, celegans_meta_df,
++                             count_thresh=0, lambda_max=0.5)
++    seeds = ['ADAL', 'ADAR']
++    col = 'Influence_score_(unsigned)'
++
++    base = ic.calculate_influence(seeds, adjust=False).sort_values('id')
++    sil = ic.calculate_influence(seeds, silenced_neurons=seeds,
++                                 adjust=False).sort_values('id')
++
++    np.testing.assert_allclose(base[col].to_numpy(), sil[col].to_numpy(),
++                               rtol=1e-6, atol=1e-12)
++    assert sil['is_seed'].sum() == len(seeds)
++
++
++def test_silencing_changes_influence_on_real_connectome(celegans_edgelist_df,
++                                                        celegans_meta_df):
++    """Silencing a genuinely connected population must move the scores,
++    and must leave them finite and on the same scale (which is what the
++    shared _normalize_W guarantees).
++    """
++    _require_petsc_slepc()
++    ic = InfluenceCalculator(celegans_edgelist_df, celegans_meta_df,
++                             count_thresh=0, lambda_max=0.5)
++    seeds = ['ADAL', 'ADAR']
++    col = 'Influence_score_(unsigned)'
++
++    hubs = [n for n in ('AVAL', 'AVAR', 'AVBL', 'AVBR')
++            if n in ic.id_to_index]
++    assert hubs, 'expected command interneurons in the bundled connectome'
++
++    base = ic.calculate_influence(seeds, adjust=False).sort_values('id')
++    sil = ic.calculate_influence(seeds, silenced_neurons=hubs,
++                                 adjust=False).sort_values('id')
++
++    assert np.all(np.isfinite(sil[col].to_numpy()))
++    assert not np.allclose(base[col].to_numpy(), sil[col].to_numpy())
++
++
++def test_feedforward_W_warns_and_does_not_blow_up():
++    """A purely feedforward W is nilpotent: its true leading eigenvalue is
++    exactly 0, so there is nothing to rescale against and lambda_max
++    cannot take effect.
++
++    SLEPc does not return 0 here.  A nilpotent matrix is defective, and
++    eigenvalues of defective matrices carry error on the order of
++    eps**(1/m), so SLEPc converges to a small *positive* value (~3.7e-5
++    for this chain).  A bare `> 0` guard accepts that noise as a genuine
++    eigenvalue, alpha = lambda_max / 3.7e-5 inflates W by ~1.4e4, and the
++    influence scores come back around 1e12 -- silently, with no NaN and
++    no error.  The relative floor in _normalize_W exists to catch exactly
++    this, so assert both halves: the warning fires, and the scores stay
++    on the O(1) scale the Neumann sum actually implies.
++    """
++    _require_petsc_slepc()
++    adj = np.zeros((4, 4))
++    adj[1, 0] = adj[2, 1] = adj[3, 2] = 1.0   # chain, no cycle -> nilpotent
++    ic = InfluenceCalculator.from_numpy(adj, count_thresh=0, lambda_max=0.5)
++
++    with pytest.warns(RuntimeWarning, match='lambda_max'):
++        df = ic.calculate_influence([0], adjust=False)
++
++    scores = df['Influence_score_(unsigned)'].to_numpy()
++    assert np.all(np.isfinite(scores))
++    # unrescaled chain: seed at 1, each hop passes the signal through at
++    # unit weight, so every node settles at 1 -- nowhere near 1e12.
++    np.testing.assert_allclose(np.sort(scores), np.ones(4), rtol=1e-6)
++
++
+ # ---------------------------------------------------------------------
+ # Bundled data sanity check
+ # ---------------------------------------------------------------------

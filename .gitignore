@@ -1,0 +1,26 @@
+# upstream 라이브러리 — setup.sh 가 클론한다 (커밋하지 않음)
+/ConnectomeInfluenceCalculator/
+
+# BANC 데이터 — 347MB, GitHub 100MB 파일 제한 초과
+*.feather
+
+# 조건별 raw influence 벡터 (63MB). 재생성 가능하고, 지표를 바꿔도
+# 재solve 없이 재계산하기 위한 캐시일 뿐이다.
+/glom_screen_results/cache/
+
+# 설치 파일 / 파생물
+Miniforge3-*.sh
+banc_single_seed_influence.csv
+
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info
+build/
+dist/
+.venv/
+.DS_Store
+
+# Claude Code 로컬 상태
+/.claude/
+CLAUDE.md
