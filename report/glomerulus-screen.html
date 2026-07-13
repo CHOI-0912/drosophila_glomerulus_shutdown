@@ -494,62 +494,124 @@
           같은 대상들을 두 가지 방법으로 줄 세웠을 때, 그 두 순위가 얼마나 비슷한지를 나타내는 수치다.
           값의 크기가 아니라 <strong>등수만</strong> 비교하기 때문에, 단위가 전혀 다른 두 가지도 견줄 수 있다.
         </p>
+
+        <h3>1. 정의</h3>
         <p>
           정의는 단순하다. <strong>값을 등수로 바꾼 다음, 거기에 보통의 상관계수를 적용한 것</strong>이 전부다.
         </p>
         <div class="eq">
           \[\rho \;=\; \operatorname{corr}\bigl(\operatorname{rank}(x),\; \operatorname{rank}(y)\bigr)\]
-          <div class="eqnote">이것이 정의다. 이 문서의 모든 ρ 값은 이 식으로 계산했다.</div>
         </div>
         <p>
-          <var>ρ</var> = +1이면 두 순위가 완전히 같고, 0이면 아무 관계가 없으며,
-          −1이면 정확히 정반대다.
+          <var>ρ</var> = +1이면 두 순위가 완전히 같고, 0이면 아무 관계가 없으며, −1이면 정확히 정반대다.
+          <strong>이 문서에 실린 모든 ρ 값은 이 정의로 계산했다.</strong>
         </p>
 
-        <h3>흔히 보는 <em>6Σd²</em> 꼴은 어디서 나오는가</h3>
-        <p>
-          교과서에는 보통 아래 식이 실려 있다. 이건 <strong>다른 정의가 아니라, 동점이 하나도 없을 때
-          위 정의를 손으로 정리한 결과</strong>다.
-        </p>
+        <h3>2. 그런데 교과서에는 이런 식이 실려 있다</h3>
         <div class="eq">
           \[\rho \;=\; 1 \;-\; \frac{6 \sum_{i} d_{i}^{2}}{n\,(n^{2} - 1)}\]
-          <div class="eqnote">동점이 하나도 없을 때에만 성립한다</div>
         </div>
         <dl class="where">
           <dt>d<sub>i</sub></dt><dd>대상 <var>i</var>가 두 순위표에서 받은 <strong>등수의 차이</strong>.</dd>
           <dt>n</dt><dd>대상 개수. 여기서는 사구체 54개.</dd>
         </dl>
         <p>
-          동점이 없으면 등수가 <strong>1, 2, …, <var>n</var>의 순열</strong>이 된다. 그러면 평균과 분산이
-          자동으로 정해진다. 평균은 (<var>n</var>+1)/2이고, 분산은 언제나
-          (<var>n</var><sup>2</sup>−1)/12이다. 이 두 값을 상관계수 식에 대입하고
-          <var>d</var> = 등수 차이로 정리하면 위 꼴이 떨어진다.
-          <strong>6이라는 숫자는 그 정리 과정에서 나온 12/2일 뿐, 아무 의미가 없다.</strong>
+          당황스러운 식이다. <strong>상관계수도 안 보이고, 뜬금없이 6이라는 숫자가 튀어나온다.</strong>
+          정의와 아무 상관 없어 보인다.
+        </p>
+
+        <h3>3. 왜 이런 모양이 되는가</h3>
+        <p>
+          <strong>두 식은 같은 식이다.</strong> 동점이 하나도 없다는 조건이 붙으면,
+          1번의 정의가 저절로 2번의 모양으로 정리된다. 이유는 이렇다.
         </p>
         <p>
-          더 직관적인 형태로 쓸 수도 있다. 순위가 정확히 뒤집혔을 때 Σ<var>d</var><sup>2</sup>가 최댓값
-          <var>n</var>(<var>n</var><sup>2</sup>−1)/3에 도달하는데, 그걸 이용하면 이렇게 된다.
+          동점이 없으면 등수가 <strong>1, 2, …, <var>n</var>의 순열</strong>이 된다.
+          두 순위표 모두 <strong>같은 숫자들을 순서만 바꿔 쓴 것</strong>이라는 뜻이다.
+          그러면 평균도 분산도 <strong>데이터와 무관하게 미리 정해진다.</strong>
+        </p>
+        <div class="eq">
+          \[\mu \;=\; \frac{n+1}{2}, \qquad \sigma^{2} \;=\; \frac{n^{2}-1}{12}\]
+          <div class="eqnote">1부터 <em>n</em>까지의 평균과 분산. 두 순위표에서 똑같다.</div>
+        </div>
+        <p>
+          상관계수는 원래 <strong>공분산을 두 표준편차로 나눈 것</strong>인데, 여기서는 두 표준편차가
+          같으므로 그냥 <var>σ</var><sup>2</sup>으로 나누면 된다. 이 <strong>미리 정해진 값들</strong>
+          덕분에 식이 통째로 접힌다.
+        </p>
+
+        <h3>4. 유도</h3>
+        <p>
+          등수 차이 <var>d</var> = <var>R</var> − <var>S</var>를 제곱해서 더해 보자.
+        </p>
+        <div class="eq">
+          \[\sum d_i^{2} \;=\; \sum R_i^{2} \;-\; 2\sum R_i S_i \;+\; \sum S_i^{2}\]
+        </div>
+        <p>
+          여기가 핵심이다. <strong>두 순위표가 같은 숫자들의 순열이므로
+          Σ<var>R</var><sup>2</sup> = Σ<var>S</var><sup>2</sup>이다.</strong>
+          그래서 위 식을 Σ<var>RS</var>에 대해 풀 수 있다.
+        </p>
+        <div class="eq">
+          \[\sum R_i S_i \;=\; \sum R_i^{2} \;-\; \frac{1}{2}\sum d_i^{2}\]
+        </div>
+        <p>이걸 공분산에 넣는다.</p>
+        <div class="eq">
+          \[\operatorname{cov} \;=\; \frac{1}{n}\sum R_i S_i \;-\; \mu^{2}
+            \;=\; \underbrace{\left(\frac{1}{n}\sum R_i^{2} - \mu^{2}\right)}_{\textstyle \sigma^{2}}
+            \;-\; \frac{\sum d_i^{2}}{2n}\]
+          <div class="eqnote">앞의 괄호가 통째로 <em>σ</em><sup>2</sup>의 정의와 같다</div>
+        </div>
+        <div class="eq">
+          \[\operatorname{cov} \;=\; \sigma^{2} \;-\; \frac{\sum d_i^{2}}{2n}\]
+        </div>
+        <p>이제 <var>σ</var><sup>2</sup>으로 나누기만 하면 끝이다.</p>
+        <div class="eq">
+          \[\rho \;=\; \frac{\operatorname{cov}}{\sigma^{2}}
+            \;=\; 1 \;-\; \frac{\sum d_i^{2}}{2n\,\sigma^{2}}
+            \;=\; 1 \;-\; \frac{\sum d_i^{2}}{2n \cdot \dfrac{n^{2}-1}{12}}
+            \;=\; 1 \;-\; \frac{6 \sum d_i^{2}}{n\,(n^{2}-1)}\]
+        </div>
+        <div class="verdict">
+          <p>
+            <strong>6의 정체는 12 ÷ 2다.</strong> 12는 1..<var>n</var> 분산의 분모에서,
+            2는 제곱을 전개할 때 나온 계수에서 왔다. <strong>아무 의미도 없는 상수다.</strong>
+          </p>
+        </div>
+
+        <h3>5. 더 직관적인 형태</h3>
+        <p>
+          순위가 정확히 뒤집혔을 때 Σ<var>d</var><sup>2</sup>가 최댓값에 도달한다.
+          그 최댓값이 <var>n</var>(<var>n</var><sup>2</sup>−1)/3이므로, 위 식은 이렇게 다시 쓸 수 있다.
         </p>
         <div class="eq">
           \[\rho \;=\; 1 \;-\; 2\,\frac{\sum_i d_i^{2}}{\bigl(\sum_i d_i^{2}\bigr)_{\max}}\]
           <div class="eqnote">등수 차이가 0이면 +1, 최대면 −1이 되도록 눈금을 맞춘 것</div>
         </div>
+        <p>
+          <strong>이게 그 식의 정체다.</strong> 두 순위가 얼마나 어긋났는지(Σ<var>d</var><sup>2</sup>)를
+          재서, 그걸 [+1, −1] 눈금에 선형으로 옮겨 놓은 것뿐이다.
+          <var>n</var>(<var>n</var><sup>2</sup>−1)이라는 복잡해 보이는 분모도
+          <strong>그저 최댓값을 적어 놓은 것</strong>이다.
+        </p>
 
+        <h3>6. 주의 — 이 문서의 D_set 에는 이 축약형을 쓰면 안 된다</h3>
         <div class="trap">
-          <div class="trap-label">주의 — 이 문서의 D_set 에는 이 축약형을 쓰면 안 된다</div>
+          <div class="trap-label">동점이 있으면 두 식이 갈라진다</div>
           <p>
-            축약형은 <strong>동점이 하나도 없을 때만</strong> 맞다. 그런데 이 문서의
-            <strong>D_set은 값이 6가지</strong>(0, 0.002, 0.004, 0.006, 0.012, 0.022)<strong>뿐이라
-            54개 사구체 중 48개가 동점</strong>이다.
+            4번의 유도는 <strong>"등수가 1..<var>n</var>의 순열"이라는 전제</strong> 위에 서 있다.
+            동점이 있으면 등수가 1.5, 3.5처럼 소수가 되어 <strong>더 이상 순열이 아니고,
+            μ와 σ<sup>2</sup>도 미리 정해지지 않는다.</strong> 유도가 통째로 무너진다.
           </p>
           <p>
-            그래서 D_set이 들어간 상관계수는 두 식이 <strong>서로 다른 답</strong>을 낸다.
+            그런데 이 문서의 <strong>D_set은 값이 6가지</strong>(0, 0.002, 0.004, 0.006, 0.012, 0.022)<strong>뿐이라
+            54개 사구체 중 48개가 동점</strong>이다.
           </p>
         </div>
 
         <div class="scroll">
           <table>
-            <thead><tr><th>비교</th><th>정의대로 (등수 상관)<br><span class="sub">이 문서가 쓴 값</span></th><th>6Σd² 축약형</th></tr></thead>
+            <thead><tr><th>비교</th><th>정의대로 (1번)<br><span class="sub">이 문서가 쓴 값</span></th><th>축약형 (2번)</th></tr></thead>
             <tbody>
               <tr class="top"><td class="g">중요도 ↔ 시냅스 수</td><td>0.8494</td><td>0.8494</td></tr>
               <tr class="top"><td class="g">중요도 ↔ D_mag</td><td>0.9971</td><td>0.9971</td></tr>
@@ -559,9 +621,8 @@
           </table>
         </div>
         <p class="cap">
-          동점이 없는 위 두 줄은 정확히 일치한다. 동점이 48개인 D_set이 끼면 갈라진다.
-          <strong>이 문서에 실린 모든 ρ 값은 정의(등수 상관)로 계산한 것</strong>이고, 축약형으로
-          검산하면 D_set 관련 값이 맞지 않는다.
+          동점이 없는 위 두 줄은 소수점 넷째 자리까지 정확히 일치한다. 동점이 48개인 D_set이 끼면 갈라진다.
+          축약형으로 검산하면 D_set 관련 값이 맞지 않으니 주의할 것.
         </p>
       </dd>
 
