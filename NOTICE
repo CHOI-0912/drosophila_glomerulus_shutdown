@@ -1,0 +1,46 @@
+Third-party notices
+===================
+
+The MIT license in LICENSE covers this repository's own work:
+
+    glom_screen/            분석 코드
+    make_silences.py        neuron.csv 생성 스크립트
+    a.py                    초기 탐색 스크립트
+    setup.sh                환경 구축
+    report/                 결과 보고서
+    glom_screen_results/    실행 결과
+    orn.txt, neuron.csv     입력
+
+It does NOT cover the following.
+
+
+library-guards.patch
+--------------------
+
+A diff against InfluenceCalculator, which is a separate work:
+
+    ConnectomeInfluenceCalculator
+    https://github.com/DrugowitschLab/ConnectomeInfluenceCalculator
+    BSD 3-Clause License
+    Copyright (c) 2025, Drugowitsch Lab
+
+The patch is a derivative of that BSD-3-licensed source and remains under its
+terms, including the requirement to retain the copyright notice above.
+
+BSD-3 is compatible with MIT, so there is no conflict.
+
+
+ConnectomeInfluenceCalculator (the library itself)
+--------------------------------------------------
+
+Not vendored here. setup.sh clones it from upstream at a pinned commit, so its
+own LICENSE.txt travels with it and is not reproduced in this repository.
+
+
+BANC connectome data
+--------------------
+
+banc_888_edgelist_simple_v2.feather and banc_888_meta.feather are not
+distributed here (347MB, and not this project's to license). Obtain them from
+the BANC dataset and place them at the repository root; setup.sh checks for
+them.

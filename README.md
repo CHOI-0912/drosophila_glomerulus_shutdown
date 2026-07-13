@@ -65,11 +65,11 @@ glomerulus에만 속하므로, ORN 시냅스를 자르면 **귀속 모호성이 
 
 [MIT](LICENSE) — © 2026 Jiwan CHOI.
 
-단, `library-guards.patch`는 예외다. 이 파일은 upstream
-[ConnectomeInfluenceCalculator][up]에 대한 diff이고, 그 원본은 **BSD 3-Clause**
-(© 2025 Drugowitsch Lab)다. 패치는 그 파생물이므로 BSD-3 조항을 따른다.
-라이브러리 자체는 이 저장소에 복사해 넣지 않았으므로(`setup.sh`가 클론),
-그 `LICENSE.txt`는 라이브러리와 함께 따라온다.
+예외는 [`NOTICE`](NOTICE)에 정리했다. 요약하면 `library-guards.patch`는 upstream
+[ConnectomeInfluenceCalculator][up]에 대한 diff이고, 그 원본이 **BSD 3-Clause**
+(© 2025 Drugowitsch Lab)이므로 패치도 BSD-3를 따른다. MIT와 호환되어 충돌은 없다.
+라이브러리 자체는 vendoring하지 않았으므로(`setup.sh`가 클론) 그 `LICENSE.txt`는
+라이브러리와 함께 따라온다.
 
 ## 검증
 
