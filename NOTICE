@@ -45,7 +45,40 @@ them from the Lee Lab's public bucket and verifies them by size and sha256:
 
     https://storage.googleapis.com/lee-lab_brain-and-nerve-cord-fly-connectome/compiled_data/banc_888/
 
-The dataset itself is at https://doi.org/10.7910/DVN/8TFGGB and is described in
+The dataset itself is at https://doi.org/10.7910/DVN/8TFGGB, released under
+CC BY 4.0 (http://creativecommons.org/licenses/by/4.0), and described in
 Bates, Phelps, Kim, Yang et al., Nature (2026),
 https://doi.org/10.1038/s41586-026-10735-w. Cite them, not this repository, for
 the data.
+
+
+Files in this repository derived from the BANC data
+---------------------------------------------------
+
+    orn.txt                  ORN root_ids, selected from banc_888_meta
+    neuron.csv               병변 대상 root_ids, selected from banc_888_meta
+    glom_screen_results/     influence scores computed from the connectome
+
+These are adaptations of the CC BY 4.0 dataset above. CC BY 4.0 permits
+distributing adaptations under other terms, so the MIT license applies to them
+as this repository's own work, on two conditions that this NOTICE satisfies:
+
+    Attribution.  Credit goes to Bates, Phelps, Kim, Yang et al. (2026) and the
+                  BANC-FlyWire Consortium, cited above.
+    Indicate      orn.txt and neuron.csv are filtered subsets of the neuron
+    changes.      metadata (see make_silences.py). The result CSVs are computed
+                  quantities, not the connectome itself.
+
+
+MathJax
+-------
+
+report/glomerulus-screen.html inlines the MathJax tex-svg bundle so that the
+page renders formulas with no network access.
+
+    MathJax  https://github.com/mathjax/MathJax
+    Apache License 2.0
+    Copyright (c) 2009-2024 The MathJax Consortium
+
+The Apache 2.0 license is at http://www.apache.org/licenses/LICENSE-2.0. The
+bundle is included verbatim and unmodified. Apache 2.0 is compatible with MIT.
