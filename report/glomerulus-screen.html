@@ -1385,8 +1385,10 @@
     </p>
     <p>
       BANC 데이터 두 개(<code>banc_888_edgelist_simple_v2.feather</code>,
-      <code>banc_888_meta.feather</code>, 합쳐서 347MB)는 저장소에 들어 있지 않다.
-      직접 구해서 저장소 루트에 놓아야 하고, <code>setup.sh</code>가 있는지 검사한다.
+      <code>banc_888_meta.feather</code>, 합쳐서 347MB)는 GitHub의 파일 용량 제한을 넘어서
+      저장소에 넣지 않았다. 대신 <code>setup.sh</code>가 Lee Lab의 공개 버킷에서 직접 내려받고,
+      <strong>받은 파일의 크기와 sha256을 대조해</strong> 중간에 끊긴 파일이 조용히 통과하는 일이
+      없게 한다.
     </p>
 
 <pre><span class="c"># 윈도우라면 먼저 WSL로 들어간다</span>
@@ -1399,7 +1401,7 @@ cd drosophila_glomerulus_shutdown
 <span class="c"># PETSc/SLEPc가 있는 conda 환경을 켠다</span>
 conda activate fly_neuron
 
-<span class="c"># 시뮬레이터를 정확한 버전으로 내려받고, BANC 데이터가 제자리에 있는지 확인한다</span>
+<span class="c"># 시뮬레이터를 정확한 버전으로 내려받고, BANC 데이터(347MB)를 받는다</span>
 bash setup.sh
 
 <span class="c"># 계산이 틀리지 않았는지 먼저 확인한다 — 이게 통과해야 나머지를 믿을 수 있다</span>

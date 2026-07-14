@@ -29,7 +29,7 @@ python -m glom_screen.report       # 순위 + 강건성 진단
 - **시뮬레이터** (`InfluenceCalculator`) — [DrugowitschLab/ConnectomeInfluenceCalculator][up]에서
   `setup.sh`가 클론한다. 커밋 `57cc08c`로 고정. 남의 코드를 복사해 들고 다니지 않는다.
 - **BANC 데이터** (`banc_888_*.feather`, 347MB) — GitHub 100MB 파일 제한 초과.
-  저장소 루트에 직접 놓아야 한다. `setup.sh`가 존재 여부를 검사한다.
+  `setup.sh`가 Lee Lab의 공개 버킷에서 내려받고, 크기와 sha256으로 검증한다.
 
 [up]: https://github.com/DrugowitschLab/ConnectomeInfluenceCalculator
 

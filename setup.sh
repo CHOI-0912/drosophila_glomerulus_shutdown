@@ -4,7 +4,7 @@
 #   bash setup.sh
 #
 # 이 저장소는 분석 코드만 담는다. 시뮬레이터(InfluenceCalculator)는 upstream에서
-# 클론하고, BANC 데이터는 용량 때문에 git에 넣지 않는다 (아래 안내).
+# 클론하고, BANC 데이터(347MB)는 Lee Lab 공개 버킷에서 내려받는다.
 set -euo pipefail
 
 UPSTREAM_URL="https://github.com/DrugowitschLab/ConnectomeInfluenceCalculator.git"
@@ -74,31 +74,72 @@ python -c "import InfluenceCalculator" 2>/dev/null || pip install -e "./$LIB_DIR
 echo "      OK"
 
 # ---------------------------------------------------------------- 4. 데이터
-# BANC 커넥톰 데이터는 347MB라 GitHub 100MB 파일 제한을 넘는다. 커밋하지 않는다.
-echo "[4/4] BANC 데이터 확인 …"
-NEED=""
-for f in banc_888_edgelist_simple_v2.feather banc_888_meta.feather; do
-  [ -f "$f" ] || NEED="$NEED $f"
-done
+# BANC 커넥톰 데이터는 347MB라 GitHub 100MB 파일 제한을 넘는다. 커밋하지 않고,
+# Lee Lab의 공개 GCS 버킷에서 받는다 (upstream README가 안내하는 경로).
+# 받은 파일은 크기와 sha256으로 검증한다. 잘린 다운로드가 조용히 통과하면 안 된다.
+BUCKET="https://storage.googleapis.com/lee-lab_brain-and-nerve-cord-fly-connectome/compiled_data/banc_888"
 
-if [ -n "$NEED" ]; then
-  cat <<EOF
+EDGELIST_FILE="banc_888_edgelist_simple_v2.feather"
+EDGELIST_SIZE=305250378
+EDGELIST_SHA="363fdef3813b72a5e45a42f17034cd5a544b654c838929cecf6e1ce5f60625cb"
 
-      누락:$NEED
+META_FILE="banc_888_meta.feather"
+META_SIZE=57550610
+META_SHA="819bbcff476e52702d6f8d8604ce1f12d1d7b11942281df2f49df2a73a6f15a5"
 
-      이 두 파일을 저장소 루트($ROOT)에 놓아야 한다.
-      용량이 커서(각각 292MB / 55MB) git으로 배포하지 않는다.
+file_size() { wc -c < "$1" | tr -d ' '; }
 
-        banc_888_edgelist_simple_v2.feather   엣지 리스트 (pre, post, count, …)
-        banc_888_meta.feather                 뉴런 메타 (root_id, cell_type, cell_class, …)
+fetch_data() {
+  local file="$1" size="$2" sha="$3"
 
-      neuron.csv 와 orn.txt 는 이 저장소에 포함되어 있으므로 다시 만들 필요 없다.
-      (neuron.csv를 다시 만들려면: python make_silences.py)
+  if [ -f "$file" ] && [ "$(file_size "$file")" = "$size" ]; then
+    echo "      $file 이미 있음 — 건너뜀"
+    return 0
+  fi
 
-EOF
+  if [ -f "$file" ]; then
+    echo "      $file 크기가 안 맞음 — 다시 받는다"
+    rm -f "$file"
+  fi
+
+  echo "      $file 내려받는 중 … ($((size / 1024 / 1024))MB)"
+  # .part로 받고 검증 후에만 제자리로 옮긴다. 중간에 끊겨도 반쪽 파일이 남지 않는다.
+  curl -fL --retry 3 --retry-delay 2 -o "$file.part" "$BUCKET/$file"
+
+  local got
+  got="$(file_size "$file.part")"
+  if [ "$got" != "$size" ]; then
+    rm -f "$file.part"
+    echo "      실패: $file 크기가 $size 여야 하는데 $got 였다." >&2
+    return 1
+  fi
+
+  if command -v sha256sum >/dev/null 2>&1; then
+    local got_sha
+    got_sha="$(sha256sum "$file.part" | cut -d' ' -f1)"
+    if [ "$got_sha" != "$sha" ]; then
+      rm -f "$file.part"
+      echo "      실패: $file 의 sha256이 다르다." >&2
+      echo "            기대: $sha" >&2
+      echo "            실제: $got_sha" >&2
+      return 1
+    fi
+  fi
+
+  mv "$file.part" "$file"
+  echo "      OK ($file)"
+}
+
+echo "[4/4] BANC 데이터 …"
+if ! command -v curl >/dev/null 2>&1; then
+  echo "      curl이 없다. 설치하거나, 아래 두 파일을 직접 받아 $ROOT 에 놓을 것:" >&2
+  echo "        $BUCKET/$EDGELIST_FILE" >&2
+  echo "        $BUCKET/$META_FILE" >&2
   exit 1
 fi
-echo "      OK"
+
+fetch_data "$EDGELIST_FILE" "$EDGELIST_SIZE" "$EDGELIST_SHA"
+fetch_data "$META_FILE"     "$META_SIZE"     "$META_SHA"
 
 cat <<EOF
 
