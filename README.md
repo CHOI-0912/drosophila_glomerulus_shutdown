@@ -17,6 +17,8 @@ python -m glom_screen.report       # 순위 + 강건성 진단
 - **[`report/glomerulus-screen.html`](report/glomerulus-screen.html)** — 결과 보고서.
   용어 정의식, 방법론적 함정 2개, 54개 전체 순위, 지표 간 상관행렬.
   브라우저로 바로 열면 된다 (외부 의존성 없는 단일 파일).
+- **`report/2518최지완_초파리뇌연구(제출용).pdf`** — 발표자료. 같은 이름의 `.pptx`가 원본이고,
+  `_v1`, `_v2`는 그 이전 판이다.
 - **[`glom_screen/README.md`](glom_screen/README.md)** — 방법·지표·한계, 근거 수치 포함.
 - **[`CHANGES.md`](CHANGES.md)** — 라이브러리 가드 패치의 근거.
 
